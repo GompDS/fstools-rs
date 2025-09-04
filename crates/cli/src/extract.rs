@@ -4,7 +4,6 @@ use std::{
     io::{Cursor, Read},
     path::PathBuf,
 };
-use std::path::Path;
 use fstools_dvdbnd::{DvdBnd, DvdBndEntryError};
 use fstools_formats::{bnd4::BND4, dcx::DcxHeader, msb};
 use indicatif::{ParallelProgressIterator, ProgressStyle};

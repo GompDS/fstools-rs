@@ -1,4 +1,4 @@
-use std::{error::Error, path::PathBuf, string};
+use std::{error::Error, path::PathBuf};
 use std::io::{Read, Write};
 use clap::{Parser, Subcommand, ValueEnum};
 use fstools_dvdbnd::{DvdBnd, FileKeyProvider};

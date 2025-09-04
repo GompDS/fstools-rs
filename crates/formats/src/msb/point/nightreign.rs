@@ -1,6 +1,6 @@
 use byteorder::LE;
-use zerocopy::{FromBytes, FromZeroes, F32, I16, I32, U32, U64};
-use super::{nightreign, MsbError};
+use zerocopy::{FromBytes, FromZeroes, F32, I16, I32, U32};
+use super::MsbError;
 
 #[derive(Debug, PartialEq)]
 #[allow(unused)]

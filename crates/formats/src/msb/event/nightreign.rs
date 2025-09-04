@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Formatter};
 use byteorder::LE;
-use zerocopy::{FromBytes, FromZeroes, F32, I16, I32, U16, U32, U64};
+use zerocopy::{FromBytes, FromZeroes, F32, I16, I32, U16, U32};
 
 use super::{MsbError};
 use crate::io_ext::{zerocopy::Padding};

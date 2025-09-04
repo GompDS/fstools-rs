@@ -4,7 +4,7 @@ pub mod nightreign;
 use std::fmt::{Debug, Formatter};
 use byteorder::LE;
 use utf16string::WStr;
-use zerocopy::{FromBytes, FromZeroes, F32, I16, I32, U16, U32, U64};
+use zerocopy::{FromBytes, FromZeroes, I32, U32, U64};
 
 use super::{MsbError, MsbParam, MsbVersion};
 use crate::io_ext::{read_wide_cstring};
