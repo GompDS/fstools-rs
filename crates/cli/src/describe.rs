@@ -23,7 +23,7 @@ use crate::GameType;
 pub fn describe_bnd(
     dvd_bnd: &DvdBnd,
     name: &str,
-    nested_bnd_names: &Vec<String>,
+    nested_bnd_names: &[String],
 ) -> Result<(), Box<dyn Error>> {
     let (dcx, data) = dvd_bnd.read_file(nested_bnd_names, name)?;
     let bnd = BND4::from_reader(&mut Cursor::new(data))?;
@@ -64,7 +64,7 @@ pub fn describe_entryfilelist(dvd_bnd: &DvdBnd, name: &str) -> Result<(), Box<dy
 pub fn describe_flver(
     dvd_bnd: &DvdBnd,
     name: &str,
-    nested_bnd_names: &Vec<String>,
+    nested_bnd_names: &[String],
 ) -> Result<(), Box<dyn Error>> {
     let (dcx, data) = dvd_bnd.read_file(nested_bnd_names, name)?;
     let flver = FLVER::from_reader(&mut Cursor::new(data))?;
@@ -106,7 +106,7 @@ pub fn describe_flver(
 pub fn describe_matbin(
     dvd_bnd: &DvdBnd,
     name: &str,
-    nested_bnd_names: &Vec<String>,
+    nested_bnd_names: &[String],
 ) -> Result<(), Box<dyn Error>> {
     let (dcx, data) = dvd_bnd.read_file(nested_bnd_names, name)?;
     let matbin = fstools_formats::matbin::Matbin::parse(&data)
@@ -138,7 +138,7 @@ pub fn describe_matbin(
 pub fn describe_msb(
     dvd_bnd: &DvdBnd,
     name: &str,
-    nested_bnd_names: &Vec<String>,
+    nested_bnd_names: &[String],
     game_type: &GameType,
 ) -> Result<(), Box<dyn Error>> {
     let (dcx, data) = dvd_bnd.read_file(nested_bnd_names, name)?;
