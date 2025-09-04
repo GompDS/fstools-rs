@@ -9,28 +9,6 @@ use fstools::{
     formats::{bnd4::BND4, dcx::DcxHeader},
 };
 
-pub fn load_dvd_bnd(
-    game_path: PathBuf,
-    keys: impl ArchiveKeyProvider,
-) -> Result<DvdBnd, io::Error> {
-    let archives = [
-        game_path.join("Data0"),
-        game_path.join("Data1"),
-        game_path.join("Data2"),
-        game_path.join("Data3"),
-        game_path.join("sd/sd"),
-    ];
-
-    DvdBnd::create(archives, &keys)
-}
-
-pub fn dictionary() -> impl Iterator<Item = PathBuf> {
-    include_str!("data/EldenRingDictionary.txt")
-        .lines()
-        .filter(|l| !l.is_empty() && !l.starts_with('#'))
-        .map(std::path::PathBuf::from)
-}
-
 pub fn decrypt_regulation(reader: &mut impl Read) -> io::Result<Vec<u8>> {
     const REGULATION_KEY: &[u8; 32] = &[
         0x99, 0xBF, 0xFC, 0x36, 0x6A, 0x6B, 0xC8, 0xC6, 0xF5, 0x82, 0x7D, 0x09, 0x36, 0x02, 0xD6,

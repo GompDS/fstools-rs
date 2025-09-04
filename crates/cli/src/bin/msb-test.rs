@@ -2,10 +2,12 @@ use std::{error::Error, io::Read, path::PathBuf};
 
 use clap::Parser;
 use fstools_dvdbnd::{DvdBnd, FileKeyProvider};
+use fstools_dvdbnd::GameType::EldenRing;
 use fstools_formats::{
     dcx::DcxHeader,
     msb::{point::PointData, Msb},
 };
+use fstools_formats::msb::{point, MsbVersion};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -20,15 +22,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let er_path = args.erpath;
 
     let keys = FileKeyProvider::new("keys");
-    let archives = [
-        er_path.join("Data0"),
-        er_path.join("Data1"),
-        er_path.join("Data2"),
-        er_path.join("Data3"),
-        er_path.join("sd/sd"),
-    ];
 
-    let vfs = DvdBnd::create(archives.clone(), &keys).expect("unable to create vfs");
+    let vfs = DvdBnd::create_from_game(EldenRing, er_path, keys).expect("unable to create vfs");
 
     for msb_path in MSBS.iter() {
         // println!("Parsing MSB {}", msb_path);
@@ -40,10 +35,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         let mut decompressed = Vec::with_capacity(decoder.hint_size());
         decoder.read_to_end(&mut decompressed)?;
 
-        let msb = Msb::parse(&decompressed).expect("Could not parse MSB");
+        let msb = Msb::parse(&decompressed, &MsbVersion::EldenRing)
+            .expect("Could not parse MSB");
 
         for point in msb.points().expect("Could not get point set from MSB") {
-            if let PointData::Message(message) =
+            if let PointData::EldenRing(point::elden_ring::PointData::Message(message)) =
                 point.expect("Could not retrieve point from MSB").point
             {
                 println!(

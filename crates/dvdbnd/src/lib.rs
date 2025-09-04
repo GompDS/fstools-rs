@@ -1,5 +1,8 @@
-use std::{collections::HashMap, fs::File, io::Error, ops::Range, path::Path, slice};
-
+use std::{collections::HashMap, fs, fs::File, io, io::Error, ops::Range, path::Path, slice, string};
+use std::fmt::format;
+use std::io::{BufRead, Cursor, Lines, Read};
+use std::iter::{Filter, Map};
+use std::path::PathBuf;
 use aes::{
     cipher::{consts::U16, generic_array::GenericArray, BlockDecrypt, BlockSizeUser, KeyInit},
     Aes128,
@@ -8,7 +11,9 @@ use fstools_formats::bhd::Bhd;
 use memmap2::MmapOptions;
 use rayon::{iter::ParallelBridge, prelude::ParallelIterator};
 use thiserror::Error;
-
+use fstools_formats::{bnd4, dcx};
+use fstools_formats::bnd4::{BND4Reader, BND4};
+use fstools_formats::dcx::{CompressionParameters, DcxHeader};
 pub use self::{
     key_provider::{ArchiveKeyProvider, FileKeyProvider},
     name::Name,
@@ -18,6 +23,12 @@ pub use self::{
 mod key_provider;
 mod name;
 mod reader;
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum GameType {
+    EldenRing,
+    Nightreign,
+}
 
 #[derive(Debug, Error)]
 pub enum DvdBndEntryError {
@@ -38,6 +49,25 @@ pub struct DvdBnd {
 }
 
 impl DvdBnd {
+    /// Read a generic dvdbnd dictionary text file's contents.
+    /// Exposed so custom dictionaries can be used.
+    pub fn dictionary(data_file_contents: &str) -> impl Iterator<Item = PathBuf> {
+        data_file_contents
+            .lines()
+            .filter(|l| !l.is_empty() && !l.starts_with('#'))
+            .map(std::path::PathBuf::from)
+            .collect::<Vec<PathBuf>>().into_iter()
+    }
+
+    pub fn dictionary_from_game(game_type: GameType) -> impl Iterator<Item = PathBuf> {
+        match game_type {
+            GameType::EldenRing => Self::dictionary(
+                include_str!("../Data/EldenRingDictionary.txt")),
+            GameType::Nightreign => Self::dictionary(
+                include_str!("../Data/NightreignDictionary.txt")),
+        }
+    }
+
     fn load_archive<P: AsRef<Path>>(
         path: P,
         key_provider: &impl ArchiveKeyProvider,
@@ -99,6 +129,37 @@ impl DvdBnd {
             })?;
 
         Ok(DvdBnd { archives, entries })
+    }
+
+    pub fn create_from_game(
+        game_type: GameType,
+        game_path: PathBuf,
+        keys: impl ArchiveKeyProvider,
+    ) -> Result<DvdBnd, io::Error> {
+        let archives: &[PathBuf] = match &game_type {
+            GameType::EldenRing => {
+                &[
+                    game_path.join("Data0"),
+                    game_path.join("Data1"),
+                    game_path.join("Data2"),
+                    game_path.join("Data3"),
+                    game_path.join("DLC"),
+                    game_path.join("sd/sd"),
+                    game_path.join("sd/sd_dlc02"),
+                ]
+            }
+            GameType::Nightreign => {
+                &[
+                    game_path.join("Data0"),
+                    game_path.join("Data1"),
+                    game_path.join("Data2"),
+                    game_path.join("Data3"),
+                    game_path.join("sd/sd"),
+                ]
+            }
+        };
+
+        DvdBnd::create(archives, &keys)
     }
 
     /// Open a reader to the file identified by [name].
@@ -168,6 +229,60 @@ impl DvdBnd {
             }
             None => Err(DvdBndEntryError::NotFound),
         }
+    }
+
+    /// Read the bytes of a nested or non-nested file within the container
+    pub fn read_file(
+        &self,
+        nested_bnd_names: &Vec<String>,
+        name: &str,
+    ) -> Result<(String, Vec<u8>), Box<dyn std::error::Error>> {
+        let mut data = vec![];
+        let mut cmp_string: String;
+
+        if nested_bnd_names.len() > 0 {
+            let dvdbnd_entry = nested_bnd_names.first().unwrap();
+            let (_, mut reader) = DcxHeader::read(self.open(dvdbnd_entry)?)?;
+            reader.read_to_end(&mut data)?;
+
+            if nested_bnd_names.len() > 1 {
+                for n in nested_bnd_names[1..].iter() {
+                    let result = Self::read_nested_bnd(&n, &mut data);
+                    if let Err(e) = result { return Err(e) }
+                    data = result?;
+                }
+            }
+
+            let result = Self::read_nested_bnd(&name, &mut data);
+            if let Err(e) = result { return Err(e) }
+            data = result?;
+            cmp_string = String::from("None");
+        } else {
+            let (dcx, mut reader) = DcxHeader::read(self.open(name)?)?;
+            cmp_string = format(format_args!("{:?}", dcx.compression_parameters()));
+            reader.read_to_end(&mut data)?;
+        }
+
+        Ok((cmp_string, data))
+    }
+
+    fn read_nested_bnd(
+        nested_name: &str,
+        parent_data: &Vec<u8>
+    ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+        let bnd = BND4::from_reader(&mut Cursor::new(parent_data))?;
+        let nested_bnd_entry = bnd.files.iter().find(|entry| {
+            *(Path::new(entry.path.as_str()).file_name().unwrap().to_str().unwrap()) == *nested_name
+        });
+
+        if !nested_bnd_entry.is_some() {
+            return Err(format!("Nested file '{}' not found", nested_name).into());
+        }
+
+        let mut bnd4_reader : BND4Reader = BND4Reader::new(bnd.data);
+        let data_out = nested_bnd_entry.unwrap().bytes(&mut bnd4_reader)?;
+
+        Ok(data_out)
     }
 }
 

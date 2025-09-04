@@ -7,23 +7,25 @@ use std::{
     sync::Arc,
 };
 
-use fstools::{formats::dcx::DcxHeader, prelude::*};
-use fstools_elden_ring_support::{decrypt_regulation, dictionary};
+use fstools::{dvdbnd, formats::dcx::DcxHeader, prelude::*};
+use fstools_elden_ring_support::decrypt_regulation;
 use fstools_formats::dcx::DcxError;
 use insta::assert_snapshot;
 use libtest_mimic::{Arguments, Failed, Trial};
+use fstools_dvdbnd::GameType::EldenRing;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Arguments::from_args();
     let er_path = PathBuf::from(std::env::var("ER_PATH").expect("er_path"));
     let reg_path = er_path.join("regulation.bin");
     let keys_path = PathBuf::from(std::env::var("ER_KEYS_PATH").expect("er_keys_path"));
-    let vfs = Arc::new(fstools_elden_ring_support::load_dvd_bnd(
+    let vfs = Arc::new(DvdBnd::create_from_game(
+        EldenRing,
         er_path,
         FileKeyProvider::new(keys_path),
     )?);
 
-    let lines = dictionary()
+    let lines = DvdBnd::dictionary_from_game(EldenRing)
         .filter(|line| line.extension() == Some(OsStr::new("dcx")))
         .collect::<HashSet<_>>();
 

@@ -1,20 +1,30 @@
-use std::{
-    error::Error,
-    io::{Cursor, Read},
-};
-
+use std::{error::Error, io, io::{Cursor, Read}, vec};
+use std::any::Any;
+use std::ffi::{OsStr, OsString};
+use std::ops::Deref;
+use std::path::Path;
 use fstools_dvdbnd::DvdBnd;
-use fstools_formats::{bnd4::BND4, dcx::DcxHeader, entryfilelist::EntryFileList};
+use fstools_formats::{bnd4, bnd4::BND4, dcx::DcxHeader, entryfilelist::EntryFileList, msb, param};
+use fstools_formats::bnd4::BND4Reader;
+use fstools_formats::flver::reader::FLVER;
+use fstools_formats::matbin::{MatbinError, ParameterIterElement};
+use fstools_formats::msb::{event, point, parts, MsbError, MsbParam, MsbVersion};
+use fstools_formats::msb::event::EventType;
+use fstools_formats::msb::point::PointType;
+use fstools_formats::msb::parts::PartType;
+use fstools_formats::msb::MsbVersion::{EldenRing, Nightreign};
+use fstools_formats::param::{ParamCommon, ParamFileLayout};
+use crate::GameType;
 
-pub fn describe_bnd(dvd_bnd: &DvdBnd, name: &str) -> Result<(), Box<dyn Error>> {
-    let (dcx, mut reader) = DcxHeader::read(dvd_bnd.open(name)?)?;
-
-    let mut data = vec![];
-    reader.read_to_end(&mut data)?;
-
+pub fn describe_bnd(
+    dvd_bnd: &DvdBnd,
+    name: &str,
+    nested_bnd_names: &Vec<String>
+) -> Result<(), Box<dyn Error>> {
+    let (dcx, data) = dvd_bnd.read_file(&nested_bnd_names, &name)?;
     let bnd = BND4::from_reader(&mut Cursor::new(data))?;
 
-    println!("Compression type: {:?}", dcx.compression_parameters());
+    println!("Compression type: {}", dcx);
     println!("Files: {}", bnd.files.len());
 
     for idx in 0..bnd.files.len() {
@@ -47,6 +57,149 @@ pub fn describe_entryfilelist(dvd_bnd: &DvdBnd, name: &str) -> Result<(), Box<dy
     Ok(())
 }
 
-pub fn describe_matbin(_dvd_bnd: &DvdBnd, _name: &str) -> Result<(), Box<dyn Error>> {
-    todo!()
+pub fn describe_flver(
+    dvd_bnd: &DvdBnd,
+    name: &str,
+    nested_bnd_names: &Vec<String>
+) -> Result<(), Box<dyn Error>> {
+    let (dcx, data) = dvd_bnd.read_file(&nested_bnd_names, &name)?;
+    let flver = FLVER::from_reader(&mut Cursor::new(data))?;
+
+    println!("Compression type: {}", dcx);
+    println!("Version: 0x{:X}", flver.version);
+    println!("Bounding Box Min: {}", flver.bounding_box_min);
+    println!("Bounding Box Max: {}", flver.bounding_box_max);
+    println!("Faces: {}", flver.face_count);
+    println!("Index Buffers: {}", flver.face_sets.len());
+    println!("Vertex Buffers: {}", flver.vertex_buffers.len());
+    println!("Bones: {}", flver.bones.len());
+    println!("Dummies: {}", flver.dummies.len());
+
+    println!("Materials: {}", flver.materials.len());
+    for idx in 0..flver.materials.len() {
+        println!("Material[{idx}] {}", flver.materials[idx].mtd);
+    }
+
+    println!("Meshes: {}", flver.meshes.len());
+    for idx in 0..flver.meshes.len() {
+        print!("Mesh[{idx}]");
+        print!(" bone: {},", flver.meshes[idx].default_bone_index);
+        print!(" material: {},", flver.meshes[idx].material_index);
+        print!(" dynamic: {},", flver.meshes[idx].dynamic);
+        print!(" Index Buffers: {:?},", flver.meshes[idx].face_set_indices.as_slice());
+        println!(" Vertex Buffers: {:?}", flver.meshes[idx].vertex_buffer_indices.as_slice());
+    }
+
+    Ok(())
+}
+
+pub fn describe_matbin(
+    dvd_bnd: &DvdBnd,
+    name: &str,
+    nested_bnd_names: &Vec<String>
+) -> Result<(), Box<dyn Error>> {
+    let (dcx, data) = dvd_bnd.read_file(&nested_bnd_names, &name)?;
+    let matbin = fstools_formats::matbin::Matbin::parse(&data).unwrap();
+
+    println!("Compression type: {}", dcx);
+    println!("Shader: {}", matbin.shader_path().unwrap());
+    println!("Source: {}", matbin.source_path().unwrap());
+    let mut params = matbin.parameters();
+    let param_count: usize = matbin.parameters().count();
+    println!("Parameters: {}", param_count);
+    for idx in 0..param_count {
+        let param = params.next().unwrap().unwrap();
+        println!("Parameter[{idx}] {0} = {1:?}", param.name, param.value);
+    }
+    let mut samplers = matbin.samplers();
+    let sampler_count: usize = matbin.samplers().count();
+    println!("Samplers: {}", sampler_count);
+    for idx in 0..sampler_count {
+        let sampler = samplers.next().unwrap().unwrap();
+        println!("Sampler[{idx}] {0}: {1}", sampler.name, sampler.path);
+    }
+
+    Ok(())
+}
+
+pub fn describe_msb(
+    dvd_bnd: &DvdBnd,
+    name: &str,
+    nested_bnd_names: &Vec<String>,
+    game_type: &GameType
+) -> Result<(), Box<dyn Error>> {
+    let (dcx, data) = dvd_bnd.read_file(&nested_bnd_names, &name)?;
+    let version: MsbVersion;
+    match game_type {
+        GameType::ER_PC => version = EldenRing,
+        GameType::NR_PC => version = Nightreign,
+    }
+    let msb = msb::Msb::parse(&data, &version).unwrap();
+
+    println!("Compression type: {}", dcx);
+
+    let models_vec = Vec::from_iter(msb.models().unwrap());
+    println!("Models: {}", models_vec.len());
+    for idx in 0..models_vec.len() {
+        if let Some(Ok(model)) = models_vec.get(idx) {
+            println!("      Model[{idx}] {}", model.name());
+        }
+    }
+
+    match version {
+        EldenRing => {
+            println!("Events: {}", msb.events().unwrap().count());
+            for ty in event::elden_ring::EventType::variants() {
+                print_msb_param_group(msb.events(), EventType::EldenRing(ty.0), ty.1);
+            }
+
+            println!("Points: {}", msb.points().unwrap().count());
+            for ty in point::elden_ring::PointType::variants() {
+                print_msb_param_group(msb.points(), PointType::EldenRing(ty.0), ty.1);
+            }
+
+            println!("Parts: {}", msb.parts().unwrap().count());
+            for ty in parts::elden_ring::PartType::variants() {
+                print_msb_param_group(msb.parts(), PartType::EldenRing(ty.0), ty.1);
+            }
+        },
+        Nightreign => {
+            println!("Events: {}", msb.events().unwrap().count());
+            for ty in event::nightreign::EventType::variants() {
+                print_msb_param_group(msb.events(), EventType::Nightreign(ty.0), ty.1);
+            }
+
+            println!("Points: {}", msb.points().unwrap().count());
+            for ty in point::nightreign::PointType::variants() {
+                print_msb_param_group(msb.points(), PointType::Nightreign(ty.0), ty.1);
+            }
+
+            println!("Parts: {}", msb.parts().unwrap().count());
+            for ty in parts::nightreign::PartType::variants() {
+                print_msb_param_group(msb.parts(), PartType::Nightreign(ty.0), ty.1);
+            }
+        },
+    }
+
+    let route_vec = Vec::from_iter(msb.routes().unwrap());
+    println!("Routes: {}", route_vec.len());
+    for idx in 0..route_vec.len() {
+        if let Some(Ok(route)) = route_vec.get(idx) {
+            println!("      Route[{idx}] {}", route.name());
+        }
+    }
+
+    Ok(())
+}
+
+fn print_msb_param_group<'a,P,T>(
+    params: Result<impl Iterator<Item = Result<P, MsbError>>, MsbError>,
+    group_type: T,
+    group_name: &str
+) -> () where P: MsbParam<'a, P, T> {
+    let param_group = P::of_type(params, group_type);
+    if param_group.len() > 0 { println!("  {0}: {1}", group_name, param_group.len()); }
+    for param in param_group {
+        println!("      {0}[{1}] {2}", group_name, param.type_index(), param.name());
+    }
 }
