@@ -241,32 +241,24 @@ impl DvdBnd {
     /// Read the bytes of a nested or non-nested file within the container
     pub fn read_file(
         &self,
-        nested_bnd_names: &Vec<String>,
+        nested_bnd_names: &[String],
         name: &str,
     ) -> Result<(String, Vec<u8>), Box<dyn std::error::Error>> {
         let mut data = vec![];
         let cmp_string: String;
 
-        if nested_bnd_names.len() > 0 {
-            let dvdbnd_entry = nested_bnd_names.first().unwrap();
+        if !nested_bnd_names.is_empty() {
+            let dvdbnd_entry = nested_bnd_names.first().expect("No nested bnd entry");
             let (_, mut reader) = DcxHeader::read(self.open(dvdbnd_entry)?)?;
             reader.read_to_end(&mut data)?;
 
             if nested_bnd_names.len() > 1 {
                 for n in nested_bnd_names[1..].iter() {
-                    let result = Self::read_nested_bnd(&n, &mut data);
-                    if let Err(e) = result {
-                        return Err(e);
-                    }
-                    data = result?;
+                    data = Self::read_nested_bnd(n, &data)?;
                 }
             }
 
-            let result = Self::read_nested_bnd(&name, &mut data);
-            if let Err(e) = result {
-                return Err(e);
-            }
-            data = result?;
+            data = Self::read_nested_bnd(name, &data)?;
             cmp_string = String::from("None");
         } else {
             let (dcx, mut reader) = DcxHeader::read(self.open(name)?)?;
@@ -285,18 +277,14 @@ impl DvdBnd {
         let nested_bnd_entry = bnd.files.iter().find(|entry| {
             *(Path::new(entry.path.as_str())
                 .file_name()
-                .unwrap()
+                .expect("Nested bnd entry has no file name")
                 .to_str()
-                .unwrap())
+                .expect("Nested bnd entry not found inside parent bnd"))
                 == *nested_name
         });
 
-        if !nested_bnd_entry.is_some() {
-            return Err(format!("Nested file '{}' not found", nested_name).into());
-        }
-
         let mut bnd4_reader: BND4Reader = BND4Reader::new(bnd.data);
-        let data_out = nested_bnd_entry.unwrap().bytes(&mut bnd4_reader)?;
+        let data_out = nested_bnd_entry.expect("No nested bnd entry").bytes(&mut bnd4_reader)?;
 
         Ok(data_out)
     }
