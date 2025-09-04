@@ -8,11 +8,11 @@ use std::{
 };
 
 use fstools::{dvdbnd, formats::dcx::DcxHeader, prelude::*};
+use fstools_dvdbnd::GameType::EldenRing;
 use fstools_elden_ring_support::decrypt_regulation;
 use fstools_formats::dcx::DcxError;
 use insta::assert_snapshot;
 use libtest_mimic::{Arguments, Failed, Trial};
-use fstools_dvdbnd::GameType::EldenRing;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Arguments::from_args();

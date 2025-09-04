@@ -40,10 +40,8 @@ impl<'a> MsbParam<'a, MODEL_PARAM_ST<'a>, ModelType> for MODEL_PARAM_ST<'a> {
         let mut models_of_type: Vec<MODEL_PARAM_ST<'a>> = vec![];
 
         if let Ok(models) = models {
-            for model in models {
-                if let Ok(model) = model {
-                    models_of_type.push(model);
-                }
+            for model in models.flatten() {
+                models_of_type.push(model);
             }
         }
 

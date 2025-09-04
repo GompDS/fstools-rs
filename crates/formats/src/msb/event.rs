@@ -2,13 +2,16 @@ pub mod elden_ring;
 pub mod nightreign;
 
 use std::fmt::{Debug, Formatter};
+
 use byteorder::LE;
 use utf16string::WStr;
 use zerocopy::{FromBytes, FromZeroes, I32, U32, U64};
 
 use super::{MsbError, MsbParam, MsbVersion};
-use crate::io_ext::{read_wide_cstring};
-use crate::msb::event::EventData::{EldenRing, Nightreign};
+use crate::{
+    io_ext::read_wide_cstring,
+    msb::event::EventData::{EldenRing, Nightreign},
+};
 
 #[allow(unused, non_camel_case_types)]
 pub struct EVENT_PARAM_ST<'a> {
@@ -41,34 +44,34 @@ impl<'a> MsbParam<'a, EVENT_PARAM_ST<'a>, EventType> for EVENT_PARAM_ST<'a> {
     const NAME: &'static str = "EVENT_PARAM_ST";
 
     fn read_entry(data: &'a [u8], version: &'a MsbVersion) -> Result<Self, MsbError> {
-        let header = Header::ref_from_prefix(&data).ok_or(MsbError::UnalignedValue)?;
+        let header = Header::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?;
 
         let name = read_wide_cstring(&data[header.name_offset.get() as usize..])?;
 
-        let general_data = GeneralData::ref_from_prefix(
-            &data[header.general_data_offset.get() as usize..])
-            .ok_or(MsbError::UnalignedValue)?;
+        let general_data =
+            GeneralData::ref_from_prefix(&data[header.general_data_offset.get() as usize..])
+                .ok_or(MsbError::UnalignedValue)?;
 
         let event_type: EventType;
         let event_data: EventData;
 
         match version {
             MsbVersion::EldenRing => {
-                event_type = EventType::EldenRing(elden_ring::EventType::from(
-                    header.event_type.get()));
+                event_type =
+                    EventType::EldenRing(elden_ring::EventType::from(header.event_type.get()));
                 event_data = EldenRing(elden_ring::EventData::from_type_and_slice(
                     header.event_type.get(),
                     &data[header.event_data_offset.get() as usize..],
-                )?)
-            },
+                )?);
+            }
             MsbVersion::Nightreign => {
-                event_type = EventType::Nightreign(nightreign::EventType::from(
-                    header.event_type.get()));
+                event_type =
+                    EventType::Nightreign(nightreign::EventType::from(header.event_type.get()));
                 event_data = Nightreign(nightreign::EventData::from_type_and_slice(
                     header.event_type.get(),
                     &data[header.event_data_offset.get() as usize..],
-                )?)
-            },
+                )?);
+            }
         };
 
         Ok(EVENT_PARAM_ST {
@@ -88,11 +91,9 @@ impl<'a> MsbParam<'a, EVENT_PARAM_ST<'a>, EventType> for EVENT_PARAM_ST<'a> {
         let mut group_events: Vec<EVENT_PARAM_ST<'a>> = vec![];
 
         if let Ok(events) = events {
-            for event in events {
-                if let Ok(event) = event {
-                    if event.event_type.1 == event_type {
-                        group_events.push(event);
-                    }
+            for event in events.flatten() {
+                if event.event_type.1 == event_type {
+                    group_events.push(event);
                 }
             }
         }

@@ -7,7 +7,11 @@ use rustyline::{error::ReadlineError, DefaultEditor};
 
 use crate::{Action, GameType};
 
-pub fn process_input(input: &str, dvd_bnd: &DvdBnd, game_type: &GameType) -> Result<(), Box<dyn Error>> {
+pub fn process_input(
+    input: &str,
+    dvd_bnd: &DvdBnd,
+    game_type: &GameType,
+) -> Result<(), Box<dyn Error>> {
     let args = shlex::split(input).ok_or("failed to parse input")?;
     let command = Action::augment_subcommands(clap::Command::new("").no_binary_name(true))
         .mut_subcommand("repl", |cmd| cmd.hide(true))

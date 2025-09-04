@@ -1,13 +1,17 @@
 use std::{error::Error, path::PathBuf};
-use std::io::{Read, Write};
+
 use clap::{Parser, Subcommand, ValueEnum};
-use fstools_dvdbnd::{DvdBnd, FileKeyProvider};
-use fstools_dvdbnd::GameType::{EldenRing, Nightreign};
+use fstools_dvdbnd::{
+    DvdBnd, FileKeyProvider,
+    GameType::{EldenRing, Nightreign},
+};
+
 use crate::{
-    describe::{describe_bnd, describe_entryfilelist, describe_matbin},
+    describe::{
+        describe_bnd, describe_entryfilelist, describe_flver, describe_matbin, describe_msb,
+    },
     extract::extract,
 };
-use crate::describe::{describe_flver, describe_msb};
 
 mod describe;
 mod extract;
@@ -29,15 +33,15 @@ pub struct Cli {
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
 pub enum GameType {
-    ER_PC,
-    NR_PC,
+    ErPc,
+    NrPc,
 }
 
-impl Into<fstools_dvdbnd::GameType> for GameType {
-    fn into(self) -> fstools_dvdbnd::GameType {
-        match self {
-            GameType::ER_PC => EldenRing,
-            GameType::NR_PC => Nightreign,
+impl From<GameType> for fstools_dvdbnd::GameType {
+    fn from(val: GameType) -> Self {
+        match val {
+            GameType::ErPc => EldenRing,
+            GameType::NrPc => Nightreign,
         }
     }
 }
@@ -55,7 +59,13 @@ pub enum AssetType {
 pub enum Action {
     /// Describe the asset with a given type and name.
     Describe {
-        #[arg(short, long, required = false, value_delimiter = ',', help = "Chain of nested bnd names. Required to describe a file therein.\nExamples:\n    Describe a tae inside the anibnd of an objbnd:\n    -n obj\\o000100.objbnd.dcx, o000100.anibnd tae o000100.tae\n    Describe a flver inside a chrbnd:\n    -n chr\\c3000.chrbnd.dcx flver c3000.flver")]
+        #[arg(
+            short,
+            long,
+            required = false,
+            value_delimiter = ',',
+            help = "Chain of nested bnd names. Required to describe a file therein.\nExamples:\n    Describe a tae inside the anibnd of an objbnd:\n    -n obj\\o000100.objbnd.dcx, o000100.anibnd tae o000100.tae\n    Describe a flver inside a chrbnd:\n    -n chr\\c3000.chrbnd.dcx flver c3000.flver"
+        )]
         nested_bnd_names: Vec<String>,
 
         #[arg(value_enum)]
@@ -91,7 +101,7 @@ impl Action {
                 describe_bnd(dvd_bnd, &name, &nested_bnd_names)?;
             }
             Action::Describe {
-                nested_bnd_names,
+                nested_bnd_names: _nested_bnd_names,
                 ty: AssetType::EntryFileList,
                 name,
             } => {
@@ -141,9 +151,8 @@ pub fn run(cli: Cli) -> Result<(), Box<dyn Error>> {
         command: action,
     } = cli;
     let game_key_dir = match game_type {
-        GameType::ER_PC => "/er_pc",
-        GameType::NR_PC => "/nr_pc",
-        _ => ""
+        GameType::ErPc => "/er_pc",
+        GameType::NrPc => "/nr_pc",
     };
     let keys = FileKeyProvider::new(format!("keys{}", game_key_dir));
 

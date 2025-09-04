@@ -1,13 +1,11 @@
 use std::{error::Error, io::Read, path::PathBuf};
 
 use clap::Parser;
-use fstools_dvdbnd::{DvdBnd, FileKeyProvider};
-use fstools_dvdbnd::GameType::EldenRing;
+use fstools_dvdbnd::{DvdBnd, FileKeyProvider, GameType::EldenRing};
 use fstools_formats::{
     dcx::DcxHeader,
-    msb::{point::PointData, Msb},
+    msb::{point, point::PointData, Msb, MsbVersion},
 };
-use fstools_formats::msb::{point, MsbVersion};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -35,8 +33,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let mut decompressed = Vec::with_capacity(decoder.hint_size());
         decoder.read_to_end(&mut decompressed)?;
 
-        let msb = Msb::parse(&decompressed, &MsbVersion::EldenRing)
-            .expect("Could not parse MSB");
+        let msb = Msb::parse(&decompressed, &MsbVersion::EldenRing).expect("Could not parse MSB");
 
         for point in msb.points().expect("Could not get point set from MSB") {
             if let PointData::EldenRing(point::elden_ring::PointData::Message(message)) =
@@ -55,7 +52,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-const MSBS: [&str; 1409] = [
+static MSBS: [&str; 1409] = [
     "/map/mapstudio/m10_00_00_00.msb.dcx",
     "/map/mapstudio/m10_00_00_99.msb.dcx",
     "/map/mapstudio/m10_01_00_00.msb.dcx",

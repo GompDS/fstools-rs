@@ -3,11 +3,13 @@ pub mod nightreign;
 
 use byteorder::LE;
 use utf16string::WStr;
-use zerocopy::{FromBytes, FromZeroes, F32, I16, I32, U32, U64};
+use zerocopy::{FromBytes, FromZeroes, F32, I32, U32, U64};
 
 use super::{MsbError, MsbParam, MsbVersion};
-use crate::io_ext::read_wide_cstring;
-use crate::msb::point::PointData::{EldenRing, Nightreign};
+use crate::{
+    io_ext::read_wide_cstring,
+    msb::point::PointData::{EldenRing, Nightreign},
+};
 
 #[derive(Debug)]
 #[allow(unused, non_camel_case_types)]
@@ -34,21 +36,21 @@ impl<'a> MsbParam<'a, POINT_PARAM_ST<'a>, PointType> for POINT_PARAM_ST<'a> {
 
         match version {
             MsbVersion::EldenRing => {
-                point_type = PointType::EldenRing(elden_ring::PointType::from(
-                    header.point_type.get()));
+                point_type =
+                    PointType::EldenRing(elden_ring::PointType::from(header.point_type.get()));
                 point = EldenRing(elden_ring::PointData::from_type_and_slice(
                     header.point_type.get(),
                     &data[header.point_data_offset.get() as usize..],
-                )?)
-            },
+                )?);
+            }
             MsbVersion::Nightreign => {
-                point_type = PointType::Nightreign(nightreign::PointType::from(
-                    header.point_type.get()));
+                point_type =
+                    PointType::Nightreign(nightreign::PointType::from(header.point_type.get()));
                 point = Nightreign(nightreign::PointData::from_type_and_slice(
                     header.point_type.get(),
                     &data[header.point_data_offset.get() as usize..],
-                )?)
-            },
+                )?);
+            }
         };
 
         Ok(POINT_PARAM_ST {
@@ -69,11 +71,9 @@ impl<'a> MsbParam<'a, POINT_PARAM_ST<'a>, PointType> for POINT_PARAM_ST<'a> {
         let mut group_points: Vec<POINT_PARAM_ST<'a>> = vec![];
 
         if let Ok(points) = points {
-            for point in points {
-                if let Ok(point) = point {
-                    if point.point_type.1 == point_type {
-                        group_points.push(point);
-                    }
+            for point in points.flatten() {
+                if point.point_type.1 == point_type {
+                    group_points.push(point);
                 }
             }
         }

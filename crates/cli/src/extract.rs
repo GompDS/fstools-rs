@@ -4,10 +4,12 @@ use std::{
     io::{Cursor, Read},
     path::PathBuf,
 };
+
 use fstools_dvdbnd::{DvdBnd, DvdBndEntryError};
-use fstools_formats::{bnd4::BND4, dcx::DcxHeader, msb};
+use fstools_formats::{bnd4::BND4, dcx::DcxHeader};
 use indicatif::{ParallelProgressIterator, ProgressStyle};
 use rayon::prelude::*;
+
 use crate::GameType;
 
 pub fn extract(
@@ -18,8 +20,8 @@ pub fn extract(
     game_type: GameType,
 ) -> Result<(), Box<dyn Error>> {
     let output_game_ext = match game_type {
-        GameType::ER_PC => "er-pc",
-        GameType::NR_PC => "nr-pc",
+        GameType::ErPc => "er-pc",
+        GameType::NrPc => "nr-pc",
     };
 
     let lines = DvdBnd::dictionary_from_game(game_type.into())
@@ -29,7 +31,6 @@ pub fn extract(
                 .map(|filter| line.to_string_lossy().contains(filter))
                 .unwrap_or(true)
         })
-        .map(std::path::PathBuf::from)
         .collect::<Vec<_>>();
 
     let style = ProgressStyle::with_template("[{elapsed_precise}] {bar:40} {pos:>7}/{len:7} {msg}")
@@ -47,7 +48,8 @@ pub fn extract(
                         let path = path.strip_prefix("/").expect("no leading slash");
                         let parent_path = if is_archive {
                             // twice to strip "bnd.dcx"
-                            output_path.join(output_game_ext)
+                            output_path
+                                .join(output_game_ext)
                                 .join(path.with_extension("").with_extension(""))
                         } else {
                             output_path.join(output_game_ext).to_path_buf()
@@ -81,12 +83,12 @@ pub fn extract(
 
                             let parent_dir = path.parent().unwrap();
                             if let Ok(false) = fs::exists(parent_dir) {
-                                if let Ok(_) = fs::create_dir_all(
-                                    output_path.join(output_game_ext).join(parent_dir)) {
-                                    fs::write(
-                                        parent_path.join(path),
-                                        buffer,
-                                    )?;
+                                if fs::create_dir_all(
+                                    output_path.join(output_game_ext).join(parent_dir),
+                                )
+                                .is_ok()
+                                {
+                                    fs::write(parent_path.join(path), buffer)?;
                                 }
                             }
 

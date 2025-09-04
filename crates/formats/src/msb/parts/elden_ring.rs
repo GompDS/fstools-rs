@@ -1,7 +1,7 @@
 use byteorder::LE;
 use zerocopy::{FromBytes, FromZeroes, F32, I16, I32, U16, U32, U64};
 
-use super::{MsbError};
+use super::MsbError;
 
 #[derive(Debug, PartialEq)]
 #[allow(unused)]
@@ -19,14 +19,16 @@ pub enum PartType {
 
 impl PartType {
     pub fn variants() -> Vec<(PartType, &'static str)> {
-        vec![(PartType::MapPiece, "MapPiece"),
-             (PartType::Enemy, "Enemy"),
-             (PartType::Player, "Player"),
-             (PartType::Collision, "Collision"),
-             (PartType::DummyAsset, "DummyAsset"),
-             (PartType::DummyEnemy, "DummyEnemy"),
-             (PartType::ConnectCollision, "ConnectCollision"),
-             (PartType::Asset, "Asset")]
+        vec![
+            (PartType::MapPiece, "MapPiece"),
+            (PartType::Enemy, "Enemy"),
+            (PartType::Player, "Player"),
+            (PartType::Collision, "Collision"),
+            (PartType::DummyAsset, "DummyAsset"),
+            (PartType::DummyEnemy, "DummyEnemy"),
+            (PartType::ConnectCollision, "ConnectCollision"),
+            (PartType::Asset, "Asset"),
+        ]
     }
 }
 
@@ -64,8 +66,9 @@ impl<'a> PartData<'a> {
         let part_type = PartType::from(part_type_id);
         Ok(match part_type {
             PartType::MapPiece => Self::MapPiece,
-            PartType::Enemy => Self::Enemy(
-                PartDataEnemy::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?),
+            PartType::Enemy => {
+                Self::Enemy(PartDataEnemy::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?)
+            }
             PartType::Player => {
                 Self::Player(PartDataPlayer::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?)
             }

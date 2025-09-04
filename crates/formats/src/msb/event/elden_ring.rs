@@ -1,7 +1,7 @@
 use byteorder::LE;
-use zerocopy::{FromBytes, FromZeroes, F32, I16, I32, U16, U32, U64};
+use zerocopy::{FromBytes, FromZeroes, F32, I16, I32, U16, U32};
 
-use super::{MsbError};
+use super::MsbError;
 
 #[derive(Debug, PartialEq)]
 #[allow(unused)]
@@ -22,17 +22,18 @@ pub enum EventType {
 
 impl EventType {
     pub fn variants() -> Vec<(EventType, &'static str)> {
-        vec![(EventType::Other,"Other"),
-             (EventType::Treasure, "Treasure"),
-             (EventType::Generator,"Generator"),
-             (EventType::ObjAct, "ObjAct"),
-             (EventType::Navmesh, "Navmesh"),
-             (EventType::PseudoMultiplayer, "PseudoMultiplayer"),
-             (EventType::PlatoonInfo, "PlatoonInfo"),
-             (EventType::PatrolInfo, "PatrolInfo"),
-             (EventType::Mount, "Mount"),
-             (EventType::SignPool, "SignPool"),
-             (EventType::RetryPoint, "RetryPoint"),
+        vec![
+            (EventType::Other, "Other"),
+            (EventType::Treasure, "Treasure"),
+            (EventType::Generator, "Generator"),
+            (EventType::ObjAct, "ObjAct"),
+            (EventType::Navmesh, "Navmesh"),
+            (EventType::PseudoMultiplayer, "PseudoMultiplayer"),
+            (EventType::PlatoonInfo, "PlatoonInfo"),
+            (EventType::PatrolInfo, "PatrolInfo"),
+            (EventType::Mount, "Mount"),
+            (EventType::SignPool, "SignPool"),
+            (EventType::RetryPoint, "RetryPoint"),
         ]
     }
 }
@@ -73,10 +74,7 @@ pub enum EventData<'a> {
 }
 
 impl<'a> EventData<'a> {
-    pub fn from_type_and_slice(
-        event_type_id: i32,
-        data: &'a [u8]
-    ) -> Result<Self, MsbError> {
+    pub fn from_type_and_slice(event_type_id: i32, data: &'a [u8]) -> Result<Self, MsbError> {
         let event_type = EventType::from(event_type_id);
         Ok(match event_type {
             EventType::Other => Self::Other,

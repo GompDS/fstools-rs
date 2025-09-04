@@ -34,15 +34,13 @@ impl<'a> MsbParam<'a, ROUTE_PARAM_ST<'a>, RouteType> for ROUTE_PARAM_ST<'a> {
 
     fn of_type(
         routes: Result<impl Iterator<Item = Result<ROUTE_PARAM_ST<'a>, MsbError>>, MsbError>,
-        _route_type: RouteType
+        _route_type: RouteType,
     ) -> Vec<ROUTE_PARAM_ST<'a>> {
         let mut routes_of_type: Vec<ROUTE_PARAM_ST<'a>> = vec![];
 
         if let Ok(routes) = routes {
-            for part in routes {
-                if let Ok(part) = part {
-                    routes_of_type.push(part);
-                }
+            for part in routes.flatten() {
+                routes_of_type.push(part);
             }
         }
 

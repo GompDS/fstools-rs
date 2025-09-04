@@ -1,9 +1,9 @@
 use std::{
-    fmt::{Debug, Formatter},
+    fmt::{Debug, Display, Formatter},
     io,
     io::SeekFrom,
 };
-use std::fmt::Display;
+
 use byteorder::{ReadBytesExt, LE};
 
 use crate::io_ext::ReadFormatsExt;

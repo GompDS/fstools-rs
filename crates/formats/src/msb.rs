@@ -12,12 +12,12 @@ use self::{
     event::EVENT_PARAM_ST, model::MODEL_PARAM_ST, parts::PARTS_PARAM_ST, point::POINT_PARAM_ST,
     route::ROUTE_PARAM_ST,
 };
-use crate::io_ext::{read_wide_cstring, ReadWidestringError};
-use crate::msb::event::EventType;
-use crate::msb::model::ModelType;
-use crate::msb::parts::PartType;
-use crate::msb::point::PointType;
-use crate::msb::route::RouteType;
+use crate::{
+    io_ext::{read_wide_cstring, ReadWidestringError},
+    msb::{
+        event::EventType, model::ModelType, parts::PartType, point::PointType, route::RouteType,
+    },
+};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum MsbVersion {
@@ -73,7 +73,7 @@ impl<'a> Msb<'a> {
     pub fn models(
         &self,
     ) -> Result<impl Iterator<Item = Result<MODEL_PARAM_ST<'_>, MsbError>>, MsbError> {
-        self.param_set::<_,ModelType>()
+        self.param_set::<_, ModelType>()
     }
 
     pub fn events(
@@ -91,13 +91,13 @@ impl<'a> Msb<'a> {
     pub fn routes(
         &self,
     ) -> Result<impl Iterator<Item = Result<ROUTE_PARAM_ST<'_>, MsbError>>, MsbError> {
-        self.param_set::<_,RouteType>()
+        self.param_set::<_, RouteType>()
     }
 
     pub fn parts(
         &self,
     ) -> Result<impl Iterator<Item = Result<PARTS_PARAM_ST<'_>, MsbError>>, MsbError> {
-        self.param_set::<_,PartType>()
+        self.param_set::<_, PartType>()
     }
 
     /// Cycles over all the param sets until it's found one with a matching type identifier
@@ -150,16 +150,16 @@ pub trait MsbParam<'a, P, T> {
         Self: Sized;
 
     /// Given a collection of params, return a vector containing only those of a certain type.
-    /// 
-    /// Example: Given a collection of events and the event type SignPool,
-    /// return a vector containing only SignPool events.
+    ///
+    /// Example: Given a collection of events and the event type `SignPool`,
+    /// return a vector containing only `SignPool` events.
     fn of_type(
         params: Result<impl Iterator<Item = Result<P, MsbError>>, MsbError>,
-        param_type: T
+        param_type: T,
     ) -> Vec<P>;
-    
+
     fn name(&self) -> String;
-    
+
     /// The index of this item relative to its type group
     fn type_index(&self) -> u32;
 }

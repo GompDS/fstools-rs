@@ -6,8 +6,10 @@ use utf16string::WStr;
 use zerocopy::{FromBytes, FromZeroes, F32, I16, I32, U16, U32, U64};
 
 use super::{MsbError, MsbParam, MsbVersion};
-use crate::io_ext::{read_wide_cstring, zerocopy::Padding};
-use crate::msb::parts::PartData::{EldenRing, Nightreign};
+use crate::{
+    io_ext::{read_wide_cstring, zerocopy::Padding},
+    msb::parts::PartData::{EldenRing, Nightreign},
+};
 
 #[derive(Debug)]
 #[allow(unused, non_camel_case_types)]
@@ -51,21 +53,20 @@ impl<'a> MsbParam<'a, PARTS_PARAM_ST<'a>, PartType> for PARTS_PARAM_ST<'a> {
 
         match version {
             MsbVersion::EldenRing => {
-                part_type = PartType::EldenRing(
-                    elden_ring::PartType::from(header.part_type.get()));
+                part_type = PartType::EldenRing(elden_ring::PartType::from(header.part_type.get()));
                 part = EldenRing(elden_ring::PartData::from_type_and_slice(
                     header.part_type.get(),
                     &data[header.part_data_offset.get() as usize..],
-                )?)
-            },
+                )?);
+            }
             MsbVersion::Nightreign => {
-                part_type = PartType::Nightreign(
-                    nightreign::PartType::from(header.part_type.get()));
+                part_type =
+                    PartType::Nightreign(nightreign::PartType::from(header.part_type.get()));
                 part = Nightreign(nightreign::PartData::from_type_and_slice(
                     header.part_type.get(),
                     &data[header.part_data_offset.get() as usize..],
-                )?)
-            },
+                )?);
+            }
         };
 
         let gparam = Gparam::ref_from_prefix(&data[header.gparam_data_offset.get() as usize..])
@@ -95,11 +96,9 @@ impl<'a> MsbParam<'a, PARTS_PARAM_ST<'a>, PartType> for PARTS_PARAM_ST<'a> {
         let mut parts_of_type: Vec<PARTS_PARAM_ST<'a>> = vec![];
 
         if let Ok(parts) = parts {
-            for part in parts {
-                if let Ok(part) = part {
-                    if part.part_type.1 == part_type {
-                        parts_of_type.push(part);
-                    }
+            for part in parts.flatten() {
+                if part.part_type.1 == part_type {
+                    parts_of_type.push(part);
                 }
             }
         }

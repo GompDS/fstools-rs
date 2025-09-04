@@ -1,5 +1,6 @@
 use byteorder::LE;
 use zerocopy::{FromBytes, FromZeroes, F32, I16, I32, U32};
+
 use super::MsbError;
 
 #[derive(Debug, PartialEq)]
@@ -38,34 +39,47 @@ pub enum PointType {
 
 impl PointType {
     pub fn variants() -> Vec<(PointType, &'static str)> {
-        vec![(PointType::Other, "Other"),
-             (PointType::EnvironmentMapPoint, "EnvironmentMapPoint"),
-             (PointType::RespawnPoint, "RespawnPoint"),
-             (PointType::Sound, "Sound"),
-             (PointType::Sfx, "Sfx"),
-             (PointType::WindSfx, "WindSfx"),
-             (PointType::SpawnPoint, "SpawnPoint"),
-             (PointType::EnvironmentMapEffectBox, "EnvironmentMapEffectBox"),
-             (PointType::Connection, "Connection"),
-             (PointType::MufflingBox, "MufflingBox"),
-             (PointType::MufflingPortal, "MufflingPortal"),
-             (PointType::SoundRegion, "SoundRegion"),
-             (PointType::PatrolRoute, "PatrolRoute"),
-             (PointType::MapPoint, "MapPoint"),
-             (PointType::WeatherOverride, "WeatherOverride"),
-             (PointType::GroupDefeatReward, "GroupDefeatReward"),
-             (PointType::Hitset, "Hitset"),
-             (PointType::WeatherCreateAssetPoint, "WeatherCreateAssetPoint"),
-             (PointType::EnvironmentMapOutput, "EnvironmentMapOutput"),
-             (PointType::MountJump, "MountJump"),
-             (PointType::Dummy, "Dummy"),
-             (PointType::FallPreventionRemoval, "FallPreventionRemoval"),
-             (PointType::MapAttachPoint, "MapAttachPoint"),
-             (PointType::BirdTravelRoute, "BirdTravelRoute"),
-             (PointType::ClearPersonInfoPoint, "ClearPersonInfoPoint"),
-             (PointType::SuddenDeathArea, "SuddenDeathArea"),
-             (PointType::UserEdgeEliminationInterior, "UserEdgeEliminationInterior"),
-             (PointType::UserEdgeEliminationExterior, "UserEdgeEliminationExterior"),
+        vec![
+            (PointType::Other, "Other"),
+            (PointType::EnvironmentMapPoint, "EnvironmentMapPoint"),
+            (PointType::RespawnPoint, "RespawnPoint"),
+            (PointType::Sound, "Sound"),
+            (PointType::Sfx, "Sfx"),
+            (PointType::WindSfx, "WindSfx"),
+            (PointType::SpawnPoint, "SpawnPoint"),
+            (
+                PointType::EnvironmentMapEffectBox,
+                "EnvironmentMapEffectBox",
+            ),
+            (PointType::Connection, "Connection"),
+            (PointType::MufflingBox, "MufflingBox"),
+            (PointType::MufflingPortal, "MufflingPortal"),
+            (PointType::SoundRegion, "SoundRegion"),
+            (PointType::PatrolRoute, "PatrolRoute"),
+            (PointType::MapPoint, "MapPoint"),
+            (PointType::WeatherOverride, "WeatherOverride"),
+            (PointType::GroupDefeatReward, "GroupDefeatReward"),
+            (PointType::Hitset, "Hitset"),
+            (
+                PointType::WeatherCreateAssetPoint,
+                "WeatherCreateAssetPoint",
+            ),
+            (PointType::EnvironmentMapOutput, "EnvironmentMapOutput"),
+            (PointType::MountJump, "MountJump"),
+            (PointType::Dummy, "Dummy"),
+            (PointType::FallPreventionRemoval, "FallPreventionRemoval"),
+            (PointType::MapAttachPoint, "MapAttachPoint"),
+            (PointType::BirdTravelRoute, "BirdTravelRoute"),
+            (PointType::ClearPersonInfoPoint, "ClearPersonInfoPoint"),
+            (PointType::SuddenDeathArea, "SuddenDeathArea"),
+            (
+                PointType::UserEdgeEliminationInterior,
+                "UserEdgeEliminationInterior",
+            ),
+            (
+                PointType::UserEdgeEliminationExterior,
+                "UserEdgeEliminationExterior",
+            ),
         ]
     }
 }
@@ -153,14 +167,17 @@ impl<'a> PointData<'a> {
                 FromBytes::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?,
             ),
 
-            PointType::Sound => Self::Sound(
-                FromBytes::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?),
+            PointType::Sound => {
+                Self::Sound(FromBytes::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?)
+            }
 
-            PointType::Sfx => Self::Sfx(
-                PointDataSfx::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?),
+            PointType::Sfx => {
+                Self::Sfx(PointDataSfx::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?)
+            }
 
-            PointType::WindSfx => Self::WindSfx(
-                FromBytes::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?),
+            PointType::WindSfx => {
+                Self::WindSfx(FromBytes::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?)
+            }
 
             PointType::SpawnPoint => {
                 Self::SpawnPoint(FromBytes::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?)
@@ -190,8 +207,9 @@ impl<'a> PointData<'a> {
                 Self::PatrolRoute(FromBytes::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?)
             }
 
-            PointType::MapPoint => Self::MapPoint(
-                FromBytes::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?),
+            PointType::MapPoint => {
+                Self::MapPoint(FromBytes::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?)
+            }
 
             PointType::WeatherOverride => Self::WeatherOverride(
                 FromBytes::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?,
@@ -201,8 +219,9 @@ impl<'a> PointData<'a> {
                 FromBytes::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?,
             ),
 
-            PointType::Hitset => Self::Hitset(
-                FromBytes::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?),
+            PointType::Hitset => {
+                Self::Hitset(FromBytes::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?)
+            }
 
             PointType::WeatherCreateAssetPoint => Self::WeatherCreateAssetPoint(
                 FromBytes::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?,
@@ -216,8 +235,9 @@ impl<'a> PointData<'a> {
                 Self::MountJump(FromBytes::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?)
             }
 
-            PointType::Dummy => Self::Dummy(
-                FromBytes::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?),
+            PointType::Dummy => {
+                Self::Dummy(FromBytes::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?)
+            }
 
             PointType::FallPreventionRemoval => Self::FallPreventionRemoval(
                 FromBytes::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?,

@@ -1,9 +1,10 @@
 use std::fmt::{Debug, Formatter};
+
 use byteorder::LE;
 use zerocopy::{FromBytes, FromZeroes, F32, I16, I32, U16, U32};
 
-use super::{MsbError};
-use crate::io_ext::{zerocopy::Padding};
+use super::MsbError;
+use crate::io_ext::zerocopy::Padding;
 
 #[derive(Debug, PartialEq)]
 #[allow(unused)]
@@ -23,16 +24,17 @@ pub enum EventType {
 
 impl EventType {
     pub fn variants() -> Vec<(EventType, &'static str)> {
-        vec![(EventType::Other, "Other"),
-             (EventType::Treasure, "Treasure"),
-             (EventType::Generator, "Generator"),
-             (EventType::ObjAct, "ObjAct"),
-             (EventType::PlatoonInfo, "PlatoonInfo"),
-             (EventType::PatrolInfo, "PatrolInfo"),
-             (EventType::Mount, "Mount"),
-             (EventType::BirdTravelInfo, "BirdTravelInfo"),
-             (EventType::TalkInfo, "TalkInfo"),
-             (EventType::GroupBattleInfo, "GroupBattleInfo"),
+        vec![
+            (EventType::Other, "Other"),
+            (EventType::Treasure, "Treasure"),
+            (EventType::Generator, "Generator"),
+            (EventType::ObjAct, "ObjAct"),
+            (EventType::PlatoonInfo, "PlatoonInfo"),
+            (EventType::PatrolInfo, "PatrolInfo"),
+            (EventType::Mount, "Mount"),
+            (EventType::BirdTravelInfo, "BirdTravelInfo"),
+            (EventType::TalkInfo, "TalkInfo"),
+            (EventType::GroupBattleInfo, "GroupBattleInfo"),
         ]
     }
 }
@@ -71,10 +73,7 @@ pub enum EventData<'a> {
 }
 
 impl<'a> EventData<'a> {
-    pub fn from_type_and_slice(
-        event_type_id: i32,
-        data: &'a [u8]
-    ) -> Result<Self, MsbError> {
+    pub fn from_type_and_slice(event_type_id: i32, data: &'a [u8]) -> Result<Self, MsbError> {
         let event_type = EventType::from(event_type_id);
         Ok(match event_type {
             EventType::Other => Self::Other,
@@ -93,9 +92,9 @@ impl<'a> EventData<'a> {
             EventType::PatrolInfo => Self::PatrolInfo(
                 EventDataPatrolInfo::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?,
             ),
-            EventType::Mount => Self::Mount(
-                EventDataMount::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?,
-            ),
+            EventType::Mount => {
+                Self::Mount(EventDataMount::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?)
+            }
             EventType::BirdTravelInfo => Self::BirdTravelInfo(
                 EventDataBirdTravelInfo::ref_from_prefix(data).ok_or(MsbError::UnalignedValue)?,
             ),
@@ -276,7 +275,6 @@ impl Debug for EventDataTalkInfo {
             .finish()
     }
 }
-
 
 #[derive(FromZeroes, FromBytes, Debug)]
 #[repr(packed)]

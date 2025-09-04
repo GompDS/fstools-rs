@@ -1,13 +1,10 @@
 use std::{
     io::{self, Read},
-    path::{Path, PathBuf},
+    path::Path,
 };
 
 use aes::cipher::{BlockDecryptMut, KeyIvInit};
-use fstools::{
-    dvdbnd::{ArchiveKeyProvider, DvdBnd},
-    formats::{bnd4::BND4, dcx::DcxHeader},
-};
+use fstools::formats::{bnd4::BND4, dcx::DcxHeader};
 
 pub fn decrypt_regulation(reader: &mut impl Read) -> io::Result<Vec<u8>> {
     const REGULATION_KEY: &[u8; 32] = &[
