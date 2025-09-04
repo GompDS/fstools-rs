@@ -109,24 +109,27 @@ pub fn describe_matbin(
     nested_bnd_names: &Vec<String>,
 ) -> Result<(), Box<dyn Error>> {
     let (dcx, data) = dvd_bnd.read_file(nested_bnd_names, name)?;
-    let matbin = fstools_formats::matbin::Matbin::parse(&data).unwrap();
+    let matbin = fstools_formats::matbin::Matbin::parse(&data)
+        .expect("Could not parse data as matbin");
 
     println!("Compression type: {}", dcx);
-    println!("Shader: {}", matbin.shader_path().unwrap());
-    println!("Source: {}", matbin.source_path().unwrap());
+    println!("Shader: {}", matbin.shader_path().expect("No shader path"));
+    println!("Source: {}", matbin.source_path().expect("No source path"));
     let mut params = matbin.parameters();
     let param_count: usize = matbin.parameters().count();
     println!("Parameters: {}", param_count);
     for idx in 0..param_count {
-        let param = params.next().unwrap().unwrap();
-        println!("Parameter[{idx}] {0} = {1:?}", param.name, param.value);
+        if let Some(Ok(param)) = params.next() {
+            println!("Parameter[{idx}] {0} = {1:?}", param.name, param.value);
+        }
     }
     let mut samplers = matbin.samplers();
     let sampler_count: usize = matbin.samplers().count();
     println!("Samplers: {}", sampler_count);
     for idx in 0..sampler_count {
-        let sampler = samplers.next().unwrap().unwrap();
-        println!("Sampler[{idx}] {0}: {1}", sampler.name, sampler.path);
+        if let Some(Ok(sampler)) = samplers.next() {
+            println!("Sampler[{idx}] {0}: {1}", sampler.name, sampler.path);
+        }
     }
 
     Ok(())
@@ -139,63 +142,78 @@ pub fn describe_msb(
     game_type: &GameType,
 ) -> Result<(), Box<dyn Error>> {
     let (dcx, data) = dvd_bnd.read_file(nested_bnd_names, name)?;
-    let version: MsbVersion;
-    match game_type {
-        GameType::ErPc => version = EldenRing,
-        GameType::NrPc => version = Nightreign,
-    }
-    let msb = msb::Msb::parse(&data, &version).unwrap();
+    let version: MsbVersion = match game_type {
+        GameType::ErPc => EldenRing,
+        GameType::NrPc => Nightreign,
+    };
+    let msb = msb::Msb::parse(&data, &version).expect("Could not parse data as msb");
 
     println!("Compression type: {}", dcx);
 
-    let models_vec = Vec::from_iter(msb.models().unwrap());
-    println!("Models: {}", models_vec.len());
-    for idx in 0..models_vec.len() {
-        if let Some(Ok(model)) = models_vec.get(idx) {
-            println!("      Model[{idx}] {}", model.name());
+    if let Ok(models) = msb.models() {
+        let models_vec = Vec::from_iter(models);
+        println!("Models: {}", models_vec.len());
+        for idx in 0..models_vec.len() {
+            if let Some(Ok(model)) = models_vec.get(idx) {
+                println!("      Model[{idx}] {}", model.name());
+            }
         }
     }
 
     match version {
         EldenRing => {
-            println!("Events: {}", msb.events().unwrap().count());
-            for ty in event::elden_ring::EventType::variants() {
-                print_msb_param_group(msb.events(), EventType::EldenRing(ty.0), ty.1);
+            if let Ok(events) = msb.events() {
+                println!("Events: {}", events.count());
+                for ty in event::elden_ring::EventType::variants() {
+                    print_msb_param_group(msb.events(), EventType::EldenRing(ty.0), ty.1);
+                }
             }
 
-            println!("Points: {}", msb.points().unwrap().count());
-            for ty in point::elden_ring::PointType::variants() {
-                print_msb_param_group(msb.points(), PointType::EldenRing(ty.0), ty.1);
+            if let Ok(points) = msb.points() {
+                println!("Points: {}", points.count());
+                for ty in point::elden_ring::PointType::variants() {
+                    print_msb_param_group(msb.points(), PointType::EldenRing(ty.0), ty.1);
+                }
             }
 
-            println!("Parts: {}", msb.parts().unwrap().count());
-            for ty in parts::elden_ring::PartType::variants() {
-                print_msb_param_group(msb.parts(), PartType::EldenRing(ty.0), ty.1);
+            if let Ok(parts) = msb.parts() {
+                println!("Parts: {}", parts.count());
+                for ty in parts::elden_ring::PartType::variants() {
+                    print_msb_param_group(msb.parts(), PartType::EldenRing(ty.0), ty.1);
+                }
             }
         }
         Nightreign => {
-            println!("Events: {}", msb.events().unwrap().count());
-            for ty in event::nightreign::EventType::variants() {
-                print_msb_param_group(msb.events(), EventType::Nightreign(ty.0), ty.1);
+            if let Ok(events) = msb.events() {
+                println!("Events: {}", events.count());
+                for ty in event::nightreign::EventType::variants() {
+                    print_msb_param_group(msb.events(), EventType::Nightreign(ty.0), ty.1);
+                }
             }
 
-            println!("Points: {}", msb.points().unwrap().count());
-            for ty in point::nightreign::PointType::variants() {
-                print_msb_param_group(msb.points(), PointType::Nightreign(ty.0), ty.1);
+            if let Ok(points) = msb.points() {
+                println!("Points: {}", points.count());
+                for ty in point::nightreign::PointType::variants() {
+                    print_msb_param_group(msb.points(), PointType::Nightreign(ty.0), ty.1);
+                }
             }
 
-            println!("Parts: {}", msb.parts().unwrap().count());
-            for ty in parts::nightreign::PartType::variants() {
-                print_msb_param_group(msb.parts(), PartType::Nightreign(ty.0), ty.1);
+            if let Ok(parts) = msb.parts() {
+                println!("Parts: {}", parts.count());
+                for ty in parts::nightreign::PartType::variants() {
+                    print_msb_param_group(msb.parts(), PartType::Nightreign(ty.0), ty.1);
+                }
             }
         }
     }
 
-    let route_vec = Vec::from_iter(msb.routes().unwrap());
-    println!("Routes: {}", route_vec.len());
-    for idx in 0..route_vec.len() {
-        if let Some(Ok(route)) = route_vec.get(idx) {
-            println!("      Route[{idx}] {}", route.name());
+    if let Ok(routes) = msb.routes() {
+        let route_vec = Vec::from_iter(routes);
+        println!("Routes: {}", route_vec.len());
+        for idx in 0..route_vec.len() {
+            if let Some(Ok(route)) = route_vec.get(idx) {
+                println!("      Route[{idx}] {}", route.name());
+            }
         }
     }
 

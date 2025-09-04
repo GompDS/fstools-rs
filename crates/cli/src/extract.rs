@@ -81,14 +81,16 @@ pub fn extract(
                             let mut buffer = Vec::new();
                             reader.read_to_end(&mut buffer)?;
 
-                            let parent_dir = path.parent().unwrap();
-                            if let Ok(false) = fs::exists(parent_dir) {
-                                if fs::create_dir_all(
-                                    output_path.join(output_game_ext).join(parent_dir),
-                                )
-                                .is_ok()
-                                {
-                                    fs::write(parent_path.join(path), buffer)?;
+                            let parent_dir = path.parent();
+                            if let Some(parent_dir) = parent_dir {
+                                if let Ok(false) = fs::exists(parent_dir) {
+                                    if fs::create_dir_all(
+                                        output_path.join(output_game_ext).join(parent_dir),
+                                    )
+                                        .is_ok()
+                                    {
+                                        fs::write(parent_path.join(path), buffer)?;
+                                    }
                                 }
                             }
 
