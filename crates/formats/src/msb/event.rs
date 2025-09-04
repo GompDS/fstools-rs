@@ -111,7 +111,7 @@ impl<'a> MsbParam<'a, EVENT_PARAM_ST<'a>, EventType> for EVENT_PARAM_ST<'a> {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct Header {
     name_offset: U64<LE>,
@@ -125,7 +125,7 @@ pub struct Header {
 }
 
 #[derive(FromZeroes, FromBytes)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct GeneralData {
     pub part_index: I32<LE>,

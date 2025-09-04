@@ -116,7 +116,7 @@ impl<'a> MsbParam<'a, PARTS_PARAM_ST<'a>, PartType> for PARTS_PARAM_ST<'a> {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct Header {
     name_offset: U64<LE>,
@@ -145,7 +145,7 @@ pub struct Header {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 // Seems to be very oriented around masking behavior. Just called "PartUnk1" in
 // soulstemplates.
@@ -162,7 +162,7 @@ pub struct MaskingBehavior {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct Entity {
     entity_id: U32<LE>,
@@ -210,7 +210,7 @@ pub enum PartData<'a> {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct Gparam {
     light_set: I32<LE>,

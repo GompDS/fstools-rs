@@ -111,7 +111,7 @@ impl<'a> EventData<'a> {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct EventDataTreasure {
     unk0: U32<LE>,
@@ -139,7 +139,7 @@ pub struct EventDataTreasure {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct EventDataGenerator {
     max_num: u8,
@@ -177,7 +177,7 @@ pub struct EventDataGenerator {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct EventDataObjAct {
     entity_id: I32<LE>,
@@ -189,7 +189,7 @@ pub struct EventDataObjAct {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct EventDataPlatoonInfo {
     platoon_id_script_active: I32<LE>,
@@ -200,7 +200,7 @@ pub struct EventDataPlatoonInfo {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct EventDataPatrolInfo {
     unk0: u8,
@@ -214,7 +214,7 @@ pub struct EventDataPatrolInfo {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct EventDataMount {
     rider_part_index: I32<LE>,
@@ -222,12 +222,12 @@ pub struct EventDataMount {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct EventDataBirdTravelInfo {}
 
 #[derive(FromZeroes, FromBytes)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct EventDataTalkInfo {
     pub unk0: I32<LE>,
@@ -277,7 +277,7 @@ impl Debug for EventDataTalkInfo {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct EventDataGroupBattleInfo {
     pub event_flag_1: I32<LE>,

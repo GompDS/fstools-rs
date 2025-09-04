@@ -58,7 +58,7 @@ impl<'a> MsbParam<'a, MODEL_PARAM_ST<'a>, ModelType> for MODEL_PARAM_ST<'a> {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct Header {
     name_offset: U64<LE>,

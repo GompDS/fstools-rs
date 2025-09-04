@@ -91,7 +91,7 @@ impl<'a> PartData<'a> {
 }
 
 #[derive(FromZeroes, FromBytes)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct PartDataEnemy {
     unk0: U32<LE>,
@@ -149,7 +149,7 @@ impl std::fmt::Debug for PartDataEnemy {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct PartDataDummyEnemyUnk88 {
     unk0: I32<LE>,
@@ -158,14 +158,14 @@ pub struct PartDataDummyEnemyUnk88 {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct PartDataPlayer {
     unk0: U32<LE>,
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct PartDataCollision {
     unk0: u8,
@@ -200,7 +200,7 @@ pub struct PartDataCollision {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct PartDataDummyAsset {
     unk0: I32<LE>,
@@ -214,7 +214,7 @@ pub struct PartDataDummyAsset {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct PartDataConnectCollision {
     collision_index: U32<LE>,
@@ -240,7 +240,7 @@ impl PartDataAsset {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct PartDataAssetHeader {
     unk0: U16<LE>,

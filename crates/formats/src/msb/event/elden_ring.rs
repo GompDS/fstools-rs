@@ -116,7 +116,7 @@ impl<'a> EventData<'a> {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct EventDataTreasure {
     unk0: U32<LE>,
@@ -144,7 +144,7 @@ pub struct EventDataTreasure {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct EventDataGenerator {
     max_num: u8,
@@ -182,7 +182,7 @@ pub struct EventDataGenerator {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct EventDataObjAct {
     entity_id: I32<LE>,
@@ -194,14 +194,14 @@ pub struct EventDataObjAct {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct EventDataNavmesh {
     point_index: I32<LE>,
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct EventDataPseudoMultiplayer {
     host_entity_id: I32<LE>,
@@ -215,7 +215,7 @@ pub struct EventDataPseudoMultiplayer {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct EventDataPlatoonInfo {
     platoon_id_script_active: I32<LE>,
@@ -226,7 +226,7 @@ pub struct EventDataPlatoonInfo {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct EventDataPatrolInfo {
     unk0: u8,
@@ -240,7 +240,7 @@ pub struct EventDataPatrolInfo {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct EventDataMount {
     rider_part_index: I32<LE>,
@@ -248,7 +248,7 @@ pub struct EventDataMount {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct EventDataSignPool {
     sign_part_index: I32<LE>,
@@ -258,7 +258,7 @@ pub struct EventDataSignPool {
 }
 
 #[derive(FromZeroes, FromBytes, Debug)]
-#[repr(packed)]
+#[repr(C, packed)]
 #[allow(unused)]
 pub struct EventDataRetryPoint {
     retry_part_index: I32<LE>,
